@@ -22,7 +22,7 @@
     <div class="container">
         <!-- Hàng chức năng -->
         <div class="row">
-            <!-- Cột trái: Thêm Giải Pháp Mới -->
+            <!-- Cột trái: Thêm Giải Pháp Mới (Đã có thêm Số điện thoại & Địa chỉ) -->
             <div class="col-md-6 mb-4">
                 <div class="card shadow p-4">
                     <h4 class="mb-3">Thêm Giải Pháp Mới</h4>
@@ -30,6 +30,14 @@
                         <div class="mb-3">
                             <label class="form-label">Tên Giải Pháp</label>
                             <input type="text" name="name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Số Điện Thoại Liên Hệ</label>
+                            <input type="text" name="phone" class="form-control" placeholder="Ví dụ: 0912345678">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Địa Chỉ</label>
+                            <input type="text" name="address" class="form-control" placeholder="Ví dụ: Cà Mau / An Giang">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Hình Ảnh (Banner/Icon)</label>
@@ -68,7 +76,7 @@
         </div>
 
         <% if (user.role === 'admin') { %>
-        <!-- Khu vực quản lý dành riêng cho Admin (Thêm/Xóa Nhân viên) -->
+        <!-- Khu vực quản lý tài khoản nhân viên -->
         <div class="card shadow p-4 mb-4">
             <h4 class="mb-3">Quản Lý Tài Khoản Nhân Viên</h4>
             <form action="/admin/user/add" method="POST" class="row g-3 mb-4">
@@ -116,7 +124,7 @@
         </div>
         <% } %>
 
-        <!-- Danh sách Giải pháp hiện có -->
+        <!-- Danh sách Giải pháp hiện có (Hiển thị thêm SĐT và Địa chỉ) -->
         <div class="card shadow p-4 mb-5">
             <h4 class="mb-3">Danh Sách Giải Pháp Đang Hiển Thị</h4>
             <div class="table-responsive">
@@ -125,8 +133,8 @@
                         <tr>
                             <th>Hình ảnh</th>
                             <th>Tên giải pháp</th>
-                            <th>Link Demo</th>
-                            <th>Link Catalog</th>
+                            <th>Liên hệ & Địa chỉ</th>
+                            <th>Liên kết</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -141,8 +149,14 @@
                                 <% } %>
                             </td>
                             <td><strong><%= sol.name %></strong></td>
-                            <td><a href="<%= sol.demo_link %>" target="_blank"><%= sol.demo_link %></a></td>
-                            <td><a href="<%= sol.catalog_link %>" target="_blank"><%= sol.catalog_link %></a></td>
+                            <td>
+                                <div><strong>SĐT:</strong> <%= sol.phone || 'Chưa cập nhật' %></div>
+                                <div><strong>ĐC:</strong> <%= sol.address || 'Chưa cập nhật' %></div>
+                            </td>
+                            <td>
+                                <div><a href="<%= sol.demo_link %>" target="_blank">Demo</a></div>
+                                <div><a href="<%= sol.catalog_link %>" target="_blank">Catalog</a></div>
+                            </td>
                             <td>
                                 <form action="/admin/solution/delete/<%= sol.id %>" method="POST" onsubmit="return confirm('Bạn có muốn xóa giải pháp này không?');">
                                     <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
