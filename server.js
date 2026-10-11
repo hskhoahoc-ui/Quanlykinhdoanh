@@ -8,9 +8,10 @@ const bcrypt = require('bcrypt');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CẤU HÌNH TRỰC TIẾP THÔNG TIN SUPABASE (Đã thay thế hoàn toàn biến môi trường)
+// CẤU HÌNH SUPABASE TRỰC TIẾP
 const SUPABASE_URL = 'https://irmjdaxejjxutvkxgwig.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybWpkYXhlamp4dXR2a3hnd2lnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5NzEyMDAwMCwiZXhwIjoyMTEyNzk2MDAwfQ.DUMMY_KEY_REPLACE_WITH_YOUR_REAL_KEY'; // <-- HÃY THAY MÃ API service_role THẬT CỦA BẠN VÀO ĐÂY
+// Lưu ý: Bạn hãy đảm bảo chuỗi ký tự bên dưới là mã Service Role API key chính xác từ Supabase của bạn
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybWpkYXhlamp4dXR2a3hnd2lnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5NzEyMDAwMCwiZXhwIjoyMTEyNzk2MDAwfQ.DUMMY_KEY_REPLACE_WITH_YOUR_REAL_KEY';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -34,7 +35,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-// Khởi tạo tài khoản Admin mặc định nếu chưa tồn tại trong Supabase
+// Tự động khởi tạo hoặc cập nhật tài khoản quản trị admin / 123456
 async function initAdmin() {
     try {
         const { data: adminUser } = await supabase
@@ -43,15 +44,23 @@ async function initAdmin() {
             .eq('username', 'admin')
             .single();
 
+        const hashedPassword = await bcrypt.hash('123456', 10);
+
         if (!adminUser) {
-            const hashedPassword = await bcrypt.hash('admin123', 10);
+            // Nếu chưa có tài khoản admin, tạo mới
             await supabase.from('users').insert([
                 { username: 'admin', password: hashedPassword, role: 'admin' }
             ]);
-            console.log('Đã tạo tài khoản admin mặc định thành công trên Supabase.');
+            console.log('Đã tạo tài khoản admin mặc định mới (mật khẩu: 123456).');
+        } else {
+            // Nếu đã có, tự động cập nhật lại mật khẩu thành 123456 để đảm bảo đăng nhập được
+            await supabase.from('users')
+                .update({ password: hashedPassword, role: 'admin' })
+                .eq('username', 'admin');
+            console.log('Đã cập nhật mật khẩu tài khoản admin thành: 123456');
         }
     } catch (err) {
-        console.log('Đang chờ kết nối cơ sở dữ liệu Supabase...');
+        console.log('Đang chờ kết nối cơ sở dữ liệu Supabase...', err.message);
     }
 }
 initAdmin();
