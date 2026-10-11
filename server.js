@@ -8,16 +8,11 @@ const bcrypt = require('bcrypt');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CẤU HÌNH SUPABASE ĐỌC TỪ BIẾN MÔI TRƯỜNG (RENDER / LOCAL)
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
+// CẤU HÌNH TRỰC TIẾP THÔNG TIN SUPABASE (Đã thay thế hoàn toàn biến môi trường)
+const SUPABASE_URL = 'https://irmjdaxejjxutvkxgwig.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybWpkYXhlamp4dXR2a3hnd2lnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5NzEyMDAwMCwiZXhwIjoyMTEyNzk2MDAwfQ.DUMMY_KEY_REPLACE_WITH_YOUR_REAL_KEY'; // <-- HÃY THAY MÃ API service_role THẬT CỦA BẠN VÀO ĐÂY
 
-// Kiểm tra bảo vệ nếu chưa cấu hình biến môi trường
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.error("LỖI: Chưa thiết lập biến môi trường SUPABASE_URL hoặc SUPABASE_KEY!");
-}
-
-const supabase = createClient(SUPABASE_URL || '', SUPABASE_KEY || '');
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Cấu hình lưu trữ ảnh upload tạm thời
 const storage = multer.diskStorage({
@@ -41,7 +36,6 @@ app.use(session({
 
 // Khởi tạo tài khoản Admin mặc định nếu chưa tồn tại trong Supabase
 async function initAdmin() {
-    if (!SUPABASE_URL || !SUPABASE_KEY) return;
     try {
         const { data: adminUser } = await supabase
             .from('users')
