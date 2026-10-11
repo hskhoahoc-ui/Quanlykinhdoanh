@@ -1,10 +1,8 @@
 const express = require('express');
 const session = require('express-session');
 const { createClient } = require('@supabase/supabase-js');
-const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,23 +12,6 @@ const SUPABASE_URL = 'https://irmjdaxejjxutvkxgwig.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_VvitTFe26BJnWm4dqdHr7g_eL6Z6Snt';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Tự động tạo thư mục public/uploads nếu chưa tồn tại trên Render
-const uploadDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Cấu hình lưu trữ ảnh upload tạm thời
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
 
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
@@ -142,11 +123,10 @@ app.get('/admin', async (req, res) => {
     }
 });
 
-// --- Quản lý Giải pháp (Cả Admin và Nhân viên) - Đã thêm phone & address ---
-app.post('/admin/solution/add', upload.single('image'), async (req, res) => {
+// --- Quản lý Giải pháp (Nhận link ảnh thay vì upload file) ---
+app.post('/admin/solution/add', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    const { name, demo_link, catalog_link, phone, address } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : '';
+    const { name, image, demo_link, catalog_link, phone, address } = req.body;
 
     await supabase.from('solutions').insert([
         { name, image, demo_link, catalog_link, phone, address }
