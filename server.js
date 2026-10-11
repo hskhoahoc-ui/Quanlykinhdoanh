@@ -4,21 +4,27 @@ const { createClient } = require('@supabase/supabase-js');
 const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // CẤU HÌNH SUPABASE TRỰC TIẾP
 const SUPABASE_URL = 'https://irmjdaxejjxutvkxgwig.supabase.co';
-// Lưu ý: Bạn hãy đảm bảo chuỗi ký tự bên dưới là mã Service Role API key chính xác từ Supabase của bạn
 const SUPABASE_KEY = 'sb_publishable_VvitTFe26BJnWm4dqdHr7g_eL6Z6Snt';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Tự động tạo thư mục public/uploads nếu chưa tồn tại trên Render (tránh lỗi 500 khi upload ảnh)
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 // Cấu hình lưu trữ ảnh upload tạm thời
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'public/uploads/');
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname));
