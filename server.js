@@ -8,12 +8,18 @@ const bcrypt = require('bcrypt');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CẤU HÌNH SUPABASE (Thay thông tin Project của bạn vào đây)
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Ví dụ: https://xyz.supabase.co
-const SUPABASE_KEY = 'YOUR_SUPABASE_SERVICE_ROLE_KEY'; // Khóa bảo mật (Service Role Key hoặc Anon Key)
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// CẤU HÌNH SUPABASE ĐỌC TỪ BIẾN MÔI TRƯỜNG (RENDER / LOCAL)
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
-// Cấu hình lưu trữ ảnh upload tạm thời (Lưu ý: trên production thực tế có thể đẩy thẳng lên Supabase Storage)
+// Kiểm tra bảo vệ nếu chưa cấu hình biến môi trường
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.error("LỖI: Chưa thiết lập biến môi trường SUPABASE_URL hoặc SUPABASE_KEY!");
+}
+
+const supabase = createClient(SUPABASE_URL || '', SUPABASE_KEY || '');
+
+// Cấu hình lưu trữ ảnh upload tạm thời
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/uploads/');
@@ -35,36 +41,43 @@ app.use(session({
 
 // Khởi tạo tài khoản Admin mặc định nếu chưa tồn tại trong Supabase
 async function initAdmin() {
-    const { data: adminUser } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', 'admin')
-        .single();
+    if (!SUPABASE_URL || !SUPABASE_KEY) return;
+    try {
+        const { data: adminUser } = await supabase
+            .from('users')
+            .select('*')
+            .eq('username', 'admin')
+            .single();
 
-    if (!adminUser) {
-        const hashedPassword = await bcrypt.hash('admin123', 10);
-        await supabase.from('users').insert([
-            { username: 'admin', password: hashedPassword, role: 'admin' }
-        ]);
-        console.log('Đã tạo tài khoản admin mặc định thành công trên Supabase.');
+        if (!adminUser) {
+            const hashedPassword = await bcrypt.hash('admin123', 10);
+            await supabase.from('users').insert([
+                { username: 'admin', password: hashedPassword, role: 'admin' }
+            ]);
+            console.log('Đã tạo tài khoản admin mặc định thành công trên Supabase.');
+        }
+    } catch (err) {
+        console.log('Đang chờ kết nối cơ sở dữ liệu Supabase...');
     }
 }
 initAdmin();
 
-// ================= ROUTER =================
+// ================= ROUTER / ĐƯỜNG DẪN =================
 
 // 1. Trang chủ công khai
 app.get('/', async (req, res) => {
-    const { data: solutions, error } = await supabase
-        .from('solutions')
-        .select('*')
-        .order('id', { ascending: false });
+    try {
+        const { data: solutions, error } = await supabase
+            .from('solutions')
+            .select('*')
+            .order('id', { ascending: false });
 
-    if (error) {
-        console.error('Lỗi lấy dữ liệu solutions:', error.message);
-        return res.status(500).send("Lỗi kết nối cơ sở dữ liệu Supabase");
+        if (error) throw error;
+        res.render('index', { solutions: solutions || [] });
+    } catch (err) {
+        console.error('Lỗi lấy dữ liệu solutions:', err.message);
+        res.render('index', { solutions: [] });
     }
-    res.render('index', { solutions: solutions || [] });
 });
 
 // 2. Trang Đăng nhập
@@ -74,22 +87,26 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .single();
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('username', username)
+            .single();
 
-    if (error || !user) {
-        return res.render('login', { error: 'Tên đăng nhập hoặc mật khẩu không đúng!' });
-    }
+        if (error || !user) {
+            return res.render('login', { error: 'Tên đăng nhập hoặc mật khẩu không đúng!' });
+        }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (match) {
-        req.session.user = user;
-        res.redirect('/admin');
-    } else {
-        res.render('login', { error: 'Tên đăng nhập hoặc mật khẩu không đúng!' });
+        const match = await bcrypt.compare(password, user.password);
+        if (match) {
+            req.session.user = user;
+            res.redirect('/admin');
+        } else {
+            res.render('login', { error: 'Tên đăng nhập hoặc mật khẩu không đúng!' });
+        }
+    } catch (err) {
+        res.render('login', { error: 'Lỗi hệ thống đăng nhập!' });
     }
 });
 
@@ -104,14 +121,18 @@ app.get('/logout', (req, res) => {
 app.get('/admin', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     
-    const { data: solutions } = await supabase.from('solutions').select('*').order('id', { ascending: false });
-    const { data: users } = await supabase.from('users').select('id, username, role');
+    try {
+        const { data: solutions } = await supabase.from('solutions').select('*').order('id', { ascending: false });
+        const { data: users } = await supabase.from('users').select('id, username, role');
 
-    res.render('admin', { 
-        user: req.session.user, 
-        solutions: solutions || [], 
-        users: users || []
-    });
+        res.render('admin', { 
+            user: req.session.user, 
+            solutions: solutions || [], 
+            users: users || []
+        });
+    } catch (err) {
+        res.status(500).send("Lỗi tải trang quản trị");
+    }
 });
 
 // --- Quản lý Giải pháp (Cả Admin và Nhân viên) ---
@@ -167,5 +188,5 @@ app.post('/admin/user/delete/:id', async (req, res) => {
 
 // Khởi động server
 app.listen(PORT, () => {
-    console.log(`Server kết nối Supabase đang chạy tại: http://localhost:${PORT}`);
+    console.log(`Server đang chạy tại cổng: ${PORT}`);
 });
