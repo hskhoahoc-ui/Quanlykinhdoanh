@@ -1,7 +1,6 @@
 const express = require('express');
 const session = require('express-session');
 const { createClient } = require('@supabase/supabase-js');
-const path = require('path');
 const bcrypt = require('bcrypt');
 
 const app = express();
@@ -22,7 +21,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-// Tự động khởi tạo hoặc cập nhật tài khoản quản trị admin / 123456
+// Khởi tạo tài khoản admin mặc định
 async function initAdmin() {
     try {
         const { data: adminUser } = await supabase
@@ -37,15 +36,13 @@ async function initAdmin() {
             await supabase.from('users').insert([
                 { username: 'admin', password: hashedPassword, role: 'admin' }
             ]);
-            console.log('Đã tạo tài khoản admin mặc định mới (mật khẩu: 123456).');
         } else {
             await supabase.from('users')
                 .update({ password: hashedPassword, role: 'admin' })
                 .eq('username', 'admin');
-            console.log('Đã cập nhật mật khẩu tài khoản admin thành: 123456');
         }
     } catch (err) {
-        console.log('Đang chờ kết nối cơ sở dữ liệu Supabase...', err.message);
+        console.log('Đang chờ kết nối Supabase...', err.message);
     }
 }
 initAdmin();
@@ -55,16 +52,15 @@ initAdmin();
 // 1. Trang chủ công khai
 app.get('/', async (req, res) => {
     try {
-        const { data: solutions, error } = await supabase
-            .from('solutions')
-            .select('*')
-            .order('id', { ascending: false });
+        const { data: solutions } = await supabase.from('solutions').select('*').order('id', { ascending: false });
+        const { data: settings } = await supabase.from('settings').select('*').eq('id', 1).single();
 
-        if (error) throw error;
-        res.render('index', { solutions: solutions || [] });
+        res.render('index', { 
+            solutions: solutions || [], 
+            settings: settings || { phone: '', address: '' } 
+        });
     } catch (err) {
-        console.error('Lỗi lấy dữ liệu solutions:', err.message);
-        res.render('index', { solutions: [] });
+        res.render('index', { solutions: [], settings: { phone: '', address: '' } });
     }
 });
 
@@ -105,35 +101,58 @@ app.get('/logout', (req, res) => {
     });
 });
 
-// 4. Trang Quản trị (Admin & Nhân viên)
+// 4. Trang Quản trị
 app.get('/admin', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     
     try {
         const { data: solutions } = await supabase.from('solutions').select('*').order('id', { ascending: false });
         const { data: users } = await supabase.from('users').select('id, username, role');
+        const { data: settings } = await supabase.from('settings').select('*').eq('id', 1).single();
 
         res.render('admin', { 
             user: req.session.user, 
             solutions: solutions || [], 
-            users: users || []
+            users: users || [],
+            settings: settings || { phone: '', address: '' }
         });
     } catch (err) {
         res.status(500).send("Lỗi tải trang quản trị");
     }
 });
 
-// --- Quản lý Giải pháp (Nhận link ảnh thay vì upload file) ---
+// --- Cập nhật thông tin Tiêu đề (SĐT & Địa chỉ) ---
+app.post('/admin/settings/update', async (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+    const { phone, address } = req.body;
+    await supabase.from('settings').update({ phone, address }).eq('id', 1);
+    res.redirect('/admin');
+});
+
+// --- Thêm giải pháp mới (Dùng Link ảnh) ---
 app.post('/admin/solution/add', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    const { name, image, demo_link, catalog_link, phone, address } = req.body;
+    const { name, image, demo_link, catalog_link } = req.body;
 
     await supabase.from('solutions').insert([
-        { name, image, demo_link, catalog_link, phone, address }
+        { name, image, demo_link, catalog_link }
     ]);
     res.redirect('/admin');
 });
 
+// --- Cập nhật (Sửa) giải pháp ---
+app.post('/admin/solution/update/:id', async (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+    const id = req.params.id;
+    const { name, image, demo_link, catalog_link } = req.body;
+
+    await supabase.from('solutions')
+        .update({ name, image, demo_link, catalog_link })
+        .eq('id', id);
+    res.redirect('/admin');
+});
+
+// --- Xóa giải pháp ---
 app.post('/admin/solution/delete/:id', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const id = req.params.id;
@@ -141,72 +160,49 @@ app.post('/admin/solution/delete/:id', async (req, res) => {
     res.redirect('/admin');
 });
 
-// --- Quản lý Nhân viên (CHỈ ADMIN MỚI CÓ QUYỀN) ---
+// --- Quản lý Nhân viên (Chỉ Admin) ---
 app.post('/admin/user/add', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.status(403).send("Bạn không có quyền thực hiện thao tác này!");
+        return res.status(403).send("Bạn không có quyền!");
     }
     const { username, password } = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const { error } = await supabase.from('users').insert([
-            { username, password: hashedPassword, role: 'staff' }
-        ]);
-        if (error) {
-            return res.send("Lỗi: Tên đăng nhập đã tồn tại hoặc lỗi hệ thống! <a href='/admin'>Quay lại</a>");
-        }
+        await supabase.from('users').insert([{ username, password: hashedPassword, role: 'staff' }]);
         res.redirect('/admin');
     } catch (e) {
-        res.status(500).send("Lỗi hệ thống");
+        res.send("Lỗi thêm nhân viên!");
     }
 });
 
 app.post('/admin/user/delete/:id', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.status(403).send("Bạn không có quyền thực hiện thao tác này!");
+        return res.status(403).send("Bạn không có quyền!");
     }
     const id = req.params.id;
-    if (id == req.session.user.id) {
-        return res.send("Không thể xóa tài khoản của chính bạn! <a href='/admin'>Quay lại</a>");
-    }
+    if (id == req.session.user.id) return res.send("Không thể xóa chính mình!");
     await supabase.from('users').delete().eq('id', id);
     res.redirect('/admin');
 });
 
-// --- Tính năng Đổi mật khẩu cá nhân ---
+// --- Đổi mật khẩu cá nhân ---
 app.post('/admin/change-password', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const { current_password, new_password } = req.body;
     
     try {
-        const { data: user, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', req.session.user.id)
-            .single();
-
-        if (error || !user) {
-            return res.send("Không tìm thấy người dùng! <a href='/admin'>Quay lại</a>");
-        }
-
+        const { data: user } = await supabase.from('users').select('*').eq('id', req.session.user.id).single();
         const match = await bcrypt.compare(current_password, user.password);
-        if (!match) {
-            return res.send("Mật khẩu hiện tại không chính xác! <a href='/admin'>Quay lại</a>");
-        }
+        if (!match) return res.send("Mật khẩu hiện tại không đúng! <a href='/admin'>Quay lại</a>");
 
         const hashedNewPassword = await bcrypt.hash(new_password, 10);
-        await supabase
-            .from('users')
-            .update({ password: hashedNewPassword })
-            .eq('id', req.session.user.id);
-
-        res.send("Đổi mật khẩu thành công! <a href='/admin'>Quay lại trang quản trị</a>");
+        await supabase.from('users').update({ password: hashedNewPassword }).eq('id', req.session.user.id);
+        res.send("Đổi mật khẩu thành công! <a href='/admin'>Quay lại</a>");
     } catch (err) {
-        res.status(500).send("Lỗi hệ thống khi đổi mật khẩu");
+        res.status(500).send("Lỗi đổi mật khẩu");
     }
 });
 
-// Khởi động server
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại cổng: ${PORT}`);
 });
