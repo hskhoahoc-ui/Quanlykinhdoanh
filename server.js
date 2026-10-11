@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 // CẤU HÌNH SUPABASE TRỰC TIẾP
 const SUPABASE_URL = 'https://irmjdaxejjxutvkxgwig.supabase.co';
 // Lưu ý: Bạn hãy đảm bảo chuỗi ký tự bên dưới là mã Service Role API key chính xác từ Supabase của bạn
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybWpkYXhlamp4dXR2a3hnd2lnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5NzEyMDAwMCwiZXhwIjoyMTEyNzk2MDAwfQ.DUMMY_KEY_REPLACE_WITH_YOUR_REAL_KEY';
+const SUPABASE_KEY = 'sb_publishable_VvitTFe26BJnWm4dqdHr7g_eL6Z6Snt';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
