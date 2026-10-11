@@ -53,13 +53,11 @@ async function initAdmin() {
         const hashedPassword = await bcrypt.hash('123456', 10);
 
         if (!adminUser) {
-            // Nếu chưa có tài khoản admin, tạo mới
             await supabase.from('users').insert([
                 { username: 'admin', password: hashedPassword, role: 'admin' }
             ]);
             console.log('Đã tạo tài khoản admin mặc định mới (mật khẩu: 123456).');
         } else {
-            // Nếu đã có, tự động cập nhật lại mật khẩu thành 123456 để đảm bảo đăng nhập được
             await supabase.from('users')
                 .update({ password: hashedPassword, role: 'admin' })
                 .eq('username', 'admin');
@@ -137,7 +135,8 @@ app.get('/admin', async (req, res) => {
         res.render('admin', { 
             user: req.session.user, 
             solutions: solutions || [], 
-            users: users || []
+            users: users || [],
+            message: null
         });
     } catch (err) {
         res.status(500).send("Lỗi tải trang quản trị");
@@ -175,7 +174,7 @@ app.post('/admin/user/add', async (req, res) => {
             { username, password: hashedPassword, role: 'staff' }
         ]);
         if (error) {
-            return res.send("Lỗi: Tên đăng nhập đã tồn tại hoặc lỗi hệ thống!");
+            return res.send("Lỗi: Tên đăng nhập đã tồn tại hoặc lỗi hệ thống! <a href='/admin'>Quay lại</a>");
         }
         res.redirect('/admin');
     } catch (e) {
@@ -189,10 +188,43 @@ app.post('/admin/user/delete/:id', async (req, res) => {
     }
     const id = req.params.id;
     if (id == req.session.user.id) {
-        return res.send("Không thể xóa tài khoản của chính bạn!");
+        return res.send("Không thể xóa tài khoản của chính bạn! <a href='/admin'>Quay lại</a>");
     }
     await supabase.from('users').delete().eq('id', id);
     res.redirect('/admin');
+});
+
+// --- Tính năng Đổi mật khẩu cá nhân ---
+app.post('/admin/change-password', async (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+    const { current_password, new_password } = req.body;
+    
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', req.session.user.id)
+            .single();
+
+        if (error || !user) {
+            return res.send("Không tìm thấy người dùng! <a href='/admin'>Quay lại</a>");
+        }
+
+        const match = await bcrypt.compare(current_password, user.password);
+        if (!match) {
+            return res.send("Mật khẩu hiện tại không chính xác! <a href='/admin'>Quay lại</a>");
+        }
+
+        const hashedNewPassword = await bcrypt.hash(new_password, 10);
+        await supabase
+            .from('users')
+            .update({ password: hashedNewPassword })
+            .eq('id', req.session.user.id);
+
+        res.send("Đổi mật khẩu thành công! <a href='/admin'>Quay lại trang quản trị</a>");
+    } catch (err) {
+        res.status(500).send("Lỗi hệ thống khi đổi mật khẩu");
+    }
 });
 
 // Khởi động server
