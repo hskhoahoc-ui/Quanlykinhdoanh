@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIẢI PHÁP QUẢN LÝ CÁC CƠ SỞ KINH DOANH</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .header-section { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; padding: 30px 0; }
+        .solution-card { background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 25px; transition: transform 0.3s; }
+        .solution-card:hover { transform: translateY(-5px); }
+        .solution-img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; }
+        footer { background: #343a40; color: white; padding: 20px 0; margin-top: 40px; text-align: center; }
+        /* Nút Hotline và Zalo nổi góc màn hình */
+        .floating-contact { position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        .contact-btn { width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-decoration: none; }
+        .zalo-btn { background-color: #0068ff; }
+        .hotline-btn { background-color: #28a745; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header-section text-center">
+        <div class="container">
+            <h1 class="fw-bold mb-2">GIẢI PHÁP QUẢN LÝ CÁC CƠ SỞ KINH DOANH</h1>
+            <p class="mb-1"><i class="fas fa-map-marker-alt"></i> Địa chỉ liên hệ: Cà Mau</p>
+            <p class="mb-0"><i class="fas fa-phone-alt"></i> Số điện thoại tư vấn: <strong>0852130163</strong> | <a href="/login" class="text-white text-decoration-underline">Quản trị hệ thống</a></p>
+        </div>
+    </div>
+
+    <!-- Nội dung chính: 4 ô chia đều trên màn hình -->
+    <div class="container my-5">
+        <div class="row">
+            <% if (solutions.length === 0) { %>
+                <div class="col-12 text-center text-muted">
+                    <h3>Chưa có ứng dụng nào được thêm. Vui lòng đăng nhập trang quản trị để thêm giải pháp!</h3>
+                </div>
+            <% } else { %>
+                <% solutions.forEach(item => { %>
+                    <!-- Mỗi ô chiếm 3 cột trên lưới 12 cột -> chia đều 4 ô mỗi hàng (col-md-3) -->
+                    <div class="col-lg-3 col-md-6 col-sm-12">
+                        <div class="solution-card h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <!-- Phía trên: Tên ứng dụng -->
+                                <h4 class="text-primary fw-bold text-center mb-3"><%= item.name %></h4>
+                                
+                                <!-- Phía dưới: Chèn ảnh vào -->
+                                <% if (item.image) { %>
+                                    <img src="<%= item.image %>" alt="<%= item.name %>" class="solution-img">
+                                <% } else { %>
+                                    <img src="https://via.placeholder.com/300x180?text=Chưa+có+ảnh" alt="No image" class="solution-img">
+                                <% } %>
+                            </div>
+
+                            <div>
+                                <!-- Phía dưới nữa: Link ứng dụng demo -->
+                                <div class="mb-2 text-center">
+                                    <% if (item.demo_link) { %>
+                                        <a href="<%= item.demo_link %>" target="_blank" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                                            <i class="fas fa-desktop"></i> Xem Demo
+                                        </a>
+                                    <% } %>
+                                </div>
+
+                                <!-- Tiếp theo: Catalog sản phẩm -->
+                                <div class="text-center">
+                                    <% if (item.catalog_link) { %>
+                                        <a href="<%= item.catalog_link %>" target="_blank" class="btn btn-success btn-sm w-100">
+                                            <i class="fas fa-file-pdf"></i> Tải Catalog Sản Phẩm
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Nút nổi Zalo & Hotline -->
+    <div class="floating-contact">
+        <!-- Hotline gọi nhanh -->
+        <a href="tel:0852130163" class="contact-btn hotline-btn" title="Gọi Hotline: 0852130163">
+            <i class="fas fa-phone"></i>
+        </a>
+        <!-- Zalo Chat Widget (Thay link chat Zalo OA hoặc số điện thoại Zalo của bạn vào đây) -->
+        <a href="https://zalo.me/0852130163" target="_blank" class="contact-btn zalo-btn" title="Chat Zalo Tư Vấn">
+            <span style="font-weight: bold; font-size: 14px;">Zalo</span>
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p class="mb-0">copyright@2026 Nguyễn Ngọc Diệp</p>
+        </div>
+    </footer>
+
+</body>
+</html>

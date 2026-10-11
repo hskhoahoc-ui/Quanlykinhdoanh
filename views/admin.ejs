@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang Quản Trị Hệ Thống</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/admin">QUẢN TRỊ HỆ THỐNG</a>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">Xin chào: <strong><%= user.username %></strong> (<%= user.role === 'admin' ? 'Quản trị viên' : 'Nhân viên' %>)</span>
+                <a href="/" class="btn btn-outline-light btn-sm me-2" target="_blank">Xem Trang Chủ</a>
+                <a href="/logout" class="btn btn-danger btn-sm">Đăng Xuất</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        
+        <!-- PHẦN 1: QUẢN LÝ CÁC GIẢI PHÁP (Dành cho cả Admin và Nhân viên) -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-boxes"></i> Quản Lý Các Giải Pháp (Thêm ô hiển thị trang chủ)</h4>
+            </div>
+            <div class="card-body">
+                <!-- Form thêm ứng dụng giải pháp mới -->
+                <form action="/admin/solution/add" method="POST" enctype="multipart/form-data" class="row g-3 mb-4 p-3 border rounded bg-white">
+                    <h5 class="text-secondary">Thêm Ứng Dụng Mới Vào Màn Hình</h5>
+                    <div class="col-md-3">
+                        <label class="form-label">Tên Ứng Dụng</label>
+                        <input type="text" name="name" class="form-control" required placeholder="VD: Quản lý Nhà thuốc">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Hình Ảnh Đại Diện</label>
+                        <input type="file" name="image" class="form-control" accept="image/*" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Link Demo</label>
+                        <input type="text" name="demo_link" class="form-control" placeholder="https://...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Link Catalog sản phẩm</label>
+                        <input type="text" name="catalog_link" class="form-control" placeholder="https://...">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Thêm Ô Vào Màn Hình</button>
+                    </div>
+                </form>
+
+                <!-- Bảng danh sách giải pháp hiện có -->
+                <h5 class="text-secondary">Danh Sách Các Giải Pháp Đang Hiển Thị</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Hình Ảnh</th>
+                                <th>Tên Ứng Dụng</th>
+                                <th>Demo Link</th>
+                                <th>Catalog Link</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% solutions.forEach(item => { %>
+                                <tr>
+                                    <td><%= item.id %></td>
+                                    <td>
+                                        <% if (item.image) { %>
+                                            <img src="<%= item.image %>" width="60" height="40" style="object-fit:cover;" class="rounded">
+                                        <% } %>
+                                    </td>
+                                    <td><strong><%= item.name %></strong></td>
+                                    <td><a href="<%= item.demo_link %>" target="_blank"><%= item.demo_link %></a></td>
+                                    <td><a href="<%= item.catalog_link %>" target="_blank"><%= item.catalog_link %></a></td>
+                                    <td>
+                                        <form action="/admin/solution/delete/<%= item.id %>" method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa ô giải pháp này?');" style="display:inline;">
+                                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Xóa</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHẦN 2: QUẢN LÝ NHÂN VIÊN (CHỈ ADMIN MỚI CÓ QUYỀN) -->
+        <% if (user.role === 'admin') { %>
+            <div class="card shadow mb-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-users-cog"></i> Phân Quyền Nhân Viên (Chỉ Quản trị viên mới thấy mục này)</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Form tạo tài khoản nhân viên -->
+                    <form action="/admin/user/add" method="POST" class="row g-3 mb-4 p-3 border rounded bg-white">
+                        <h5 class="text-secondary">Tạo Tài Khoản Nhân Viên Mới</h5>
+                        <div class="col-md-5">
+                            <label class="form-label">Tên đăng nhập nhân viên</label>
+                            <input type="text" name="username" class="form-control" required placeholder="VD: nhanvien01">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Mật khẩu</label>
+                            <input type="password" name="password" class="form-control" required placeholder="Mật khẩu đăng nhập">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-warning w-100 fw-bold"><i class="fas fa-user-plus"></i> Tạo</button>
+                        </div>
+                    </form>
+
+                    <!-- Danh sách tài khoản nhân viên -->
+                    <h5 class="text-secondary">Danh Sách Tài Khoản Trong Hệ Thống</h5>
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên Tài Khoản</th>
+                                <th>Phân Quyền (Role)</th>
+                                <th>Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% users.forEach(u => { %>
+                                <tr>
+                                    <td><%= u.id %></td>
+                                    <td><%= u.username %></td>
+                                    <td>
+                                        <span class="badge <%= u.role === 'admin' ? 'bg-danger' : 'bg-success' %>">
+                                            <%= u.role === 'admin' ? 'Quản trị viên (Admin)' : 'Nhân viên (Staff)' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (u.role !== 'admin') { %>
+                                            <form action="/admin/user/delete/<%= u.id %>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhân viên này?');" style="display:inline;">
+                                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Xóa nhân viên</button>
+                                            </form>
+                                        <% } else { %>
+                                            <span class="text-muted fst-italic">Bảo vệ (Không thể xóa)</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <% } %>
+
+    </div>
+
+</body>
+</html>
