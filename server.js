@@ -8,8 +8,8 @@ const bcrypt = require('bcrypt');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CẤU HÌNH SUPABASE SỬ DỤNG BIẾN MÔI TRƯỜNG NHƯ MẪU GỐC
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://irmjdaxejjxutvkxgwig.supabase.co'; 
+// CẤU HÌNH SUPABASE TRỰC TIẾP (AN TOÀN TUYỆT ĐỐI, KHÔNG SỢ LỖI BIẾN MÔI TRƯỜNG)
+const SUPABASE_URL = 'https://irmjdaxejjxutvkxgwig.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_VvitTFe26BJnWm4dqdHr7g_eL6Z6Snt'; 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
