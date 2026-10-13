@@ -22,7 +22,7 @@
         }
     </style>
 </head>
-<body class="bg-light">
+<body class="bg-light d-flex flex-column min-vh-100">
     <!-- Navbar / Thanh tiêu đề có SĐT và Địa chỉ đồng bộ từ Database -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
@@ -44,7 +44,7 @@
         </div>
     </div>
 
-    <div class="container mb-5">
+    <div class="container mb-5 flex-grow-1">
         <h2 class="text-center mb-4">DANH MỤC CÁC GIẢI PHÁP</h2>
         
         <div class="row">
@@ -85,5 +85,12 @@
             <% } %>
         </div>
     </div>
+
+    <!-- Dòng thông tin DOANH NGHIỆP TƯ NHÂN THIÊN LONG ở phía dưới cùng trang -->
+    <footer class="bg-dark text-white text-center py-3 mt-auto">
+        <div class="container">
+            <small>© 2026 - <strong>DOANH NGHIỆP TƯ NHÂN THIÊN LONG</strong> | SĐT: <%= settings.phone || '0852130163' %> - ĐC: <%= settings.address || '153E/8 Trần Hưng Đạo P.Bình Đức An Giang' %></small>
+        </div>
+    </footer>
 </body>
 </html>
