@@ -6,7 +6,7 @@
     <title>Trang Quản Trị Hệ Thống</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Hiệu ứng chớp màu vàng cho ô nhập liệu khi cập nhật/focus */
+        /* Hiệu ứng chớp màu vàng cho ô nhập liệu */
         @keyframes yellowPulse {
             0% { background-color: #fff9db; border-color: #f59f00; box-shadow: 0 0 0 0.25rem rgba(250, 176, 5, 0.25); }
             50% { background-color: #fff3bf; border-color: #fab005; box-shadow: 0 0 0 0.35rem rgba(250, 176, 5, 0.4); }
@@ -21,7 +21,7 @@
         }
     </style>
 </head>
-<body class="bg-light">
+<body class="bg-light d-flex flex-column min-vh-100">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
@@ -34,7 +34,7 @@
         </div>
     </nav>
 
-    <div class="container">
+    <div class="container flex-grow-1">
         <!-- Hàng 1: Cài đặt SĐT/Địa chỉ tiêu đề & Đổi mật khẩu -->
         <div class="row">
             <div class="col-md-6 mb-4">
@@ -72,7 +72,7 @@
             </div>
         </div>
 
-        <!-- Hàng 2: Thêm Giải Pháp Mới (Kèm ô nhập giá có biểu tượng ⭐ và hiệu ứng chớp vàng) -->
+        <!-- Hàng 2: Thêm Giải Pháp Mới (Có ô nhập giá kèm biểu tượng sao ⭐ và chớp vàng) -->
         <div class="card shadow p-4 mb-4">
             <h4 class="mb-3">Thêm Giải Pháp Mới</h4>
             <form action="/admin/solution/add" method="POST" class="row g-3">
@@ -83,9 +83,9 @@
                     <input type="url" name="image" class="form-control" placeholder="Link hình ảnh (URL)" required>
                 </div>
                 <div class="col-md-2">
-                    <!-- Ô nhập giá sản phẩm với biểu tượng hình sao ⭐ -->
+                    <!-- Ô nhập giá bán khi thêm mới có biểu tượng ⭐ và hiệu ứng chớp vàng -->
                     <div class="input-group">
-                        <span class="input-group-text star-label">⭐</span>
+                        <span class="input-group-text star-label" title="Giá bán sản phẩm">⭐</span>
                         <input type="text" name="price" class="form-control pulse-yellow-input" placeholder="Giá bán (VNĐ)" required>
                     </div>
                 </div>
@@ -101,25 +101,25 @@
             </form>
         </div>
 
-        <!-- Danh sách Giải pháp (Cập nhật trực tiếp các ô sản phẩm có gắn giá ⭐ và nhấp nháy vàng) -->
+        <!-- Danh sách Giải pháp (Không có ô cập nhật giá bên dưới, chỉ cập nhật thông tin cơ bản) -->
         <div class="card shadow p-4 mb-5">
-            <h4 class="mb-3">Danh Sách Giải Pháp & Cập Nhật Sản Phẩm</h4>
+            <h4 class="mb-3">Danh Sách Giải Pháp & Cập Nhật</h4>
             <div class="table-responsive">
                 <table class="table table-bordered align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th style="width: 100px;">Ảnh</th>
+                            <th>Ảnh</th>
                             <th>Tên Giải Pháp</th>
-                            <th style="width: 180px;"><span class="star-label">⭐</span> Giá Bán (VNĐ)</th>
+                            <th>Giá Gốc (⭐)</th>
                             <th>Đường Dẫn (Links)</th>
-                            <th style="width: 140px;">Thao Tác</th>
+                            <th>Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         <% solutions.forEach(sol => { %>
                         <tr>
                             <form action="/admin/solution/update/<%= sol.id %>" method="POST">
-                                <td>
+                                <td style="width: 90px;">
                                     <% if (sol.image) { %>
                                     <img src="<%= sol.image %>" alt="img" style="width: 50px; height: 50px; object-fit: cover;" class="rounded mb-1 d-block">
                                     <% } %>
@@ -128,18 +128,14 @@
                                 <td>
                                     <input type="text" name="name" value="<%= sol.name %>" class="form-control form-control-sm" required>
                                 </td>
-                                <td>
-                                    <!-- Ô cập nhật giá bán có biểu tượng chú thích hình sao và hiệu ứng chớp vàng -->
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text star-label" title="Giá bán sản phẩm">⭐</span>
-                                        <input type="text" name="price" value="<%= sol.price || '' %>" class="form-control form-control-sm pulse-yellow-input" placeholder="Nhập giá bán..." required>
-                                    </div>
+                                <td class="text-center align-middle">
+                                    <span class="star-label">⭐</span> <strong><%= sol.price || 'Liên hệ' %></strong>
                                 </td>
                                 <td>
                                     <div class="mb-1"><input type="url" name="demo_link" value="<%= sol.demo_link %>" class="form-control form-control-sm" placeholder="Link Demo"></div>
                                     <div><input type="url" name="catalog_link" value="<%= sol.catalog_link %>" class="form-control form-control-sm" placeholder="Link Catalog"></div>
                                 </td>
-                                <td>
+                                <td style="width: 140px;">
                                     <button type="submit" class="btn btn-success btn-sm w-100 mb-1">Cập Nhật</button>
                             </form>
                                     <form action="/admin/solution/delete/<%= sol.id %>" method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
@@ -183,5 +179,12 @@
         </div>
         <% } %>
     </div>
+
+    <!-- Dòng thông tin DOANH NGHIỆP TƯ NHÂN THIÊN LONG ở phía dưới cùng trang -->
+    <footer class="bg-dark text-white text-center py-3 mt-auto">
+        <div class="container">
+            <small>© 2026 - <strong>DOANH NGHIỆP TƯ NHÂN THIÊN LONG</strong> | SĐT: <%= settings.phone || '0852130163' %> - ĐC: <%= settings.address || '153E/8 Trần Hưng Đạo P.Bình Đức An Giang' %></small>
+        </div>
+    </footer>
 </body>
 </html>
