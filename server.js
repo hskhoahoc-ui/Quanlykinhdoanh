@@ -8,10 +8,14 @@ const bcrypt = require('bcrypt');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CẤU HÌNH SUPABASE DÙNG BIẾN MÔI TRƯỜNG
-const SUPABASE_URL = process.env.SUPABASE_URL || 'YOUR_SUPABASE_URL'; 
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'YOUR_SUPABASE_SERVICE_ROLE_KEY'; 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_URL.startsWith('http')) {
+    console.error("LỖI: Chưa cấu hình đúng SUPABASE_URL trong biến môi trường của Render!");
+}
+
+const supabase = createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_KEY || 'placeholder');
 
 // Cấu hình lưu trữ ảnh upload tạm thời
 const storage = multer.diskStorage({
