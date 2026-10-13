@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // CẤU HÌNH SUPABASE SỬ DỤNG BIẾN MÔI TRƯỜNG NHƯ MẪU GỐC
-const SUPABASE_URL = process.env.SUPABASE_URL || 'postgresql://postgres.irmjdaxejjxutvkxgwig:DiepNN%402024@aws-0-ap-south-1.pooler.supabase.com:6543/postgres'; 
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://irmjdaxejjxutvkxgwig.supabase.co'; 
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_VvitTFe26BJnWm4dqdHr7g_eL6Z6Snt'; 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
