@@ -162,7 +162,7 @@ app.post('/admin/change-password', async (req, res) => {
     res.redirect('/admin');
 });
 
-// --- Quản lý Giải pháp (Thêm, Cập nhật có giá ⭐ & Hiệu ứng chớp vàng) ---
+// --- Quản lý Giải pháp (Thêm mới có giá ⭐ & Sửa thông tin cơ bản) ---
 app.post('/admin/solution/add', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const { name, image, demo_link, catalog_link, price } = req.body;
@@ -176,10 +176,10 @@ app.post('/admin/solution/add', async (req, res) => {
 app.post('/admin/solution/update/:id', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const id = req.params.id;
-    const { name, image, demo_link, catalog_link, price } = req.body;
+    const { name, image, demo_link, catalog_link } = req.body;
 
     await supabase.from('solutions').update({
-        name, image, demo_link, catalog_link, price
+        name, image, demo_link, catalog_link
     }).eq('id', id);
 
     res.redirect('/admin');
