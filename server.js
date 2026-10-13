@@ -8,9 +8,9 @@ const bcrypt = require('bcrypt');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CẤU HÌNH SUPABASE (Thay thông tin Project của bạn vào đây)
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Ví dụ: https://xyz.supabase.co
-const SUPABASE_KEY = 'YOUR_SUPABASE_SERVICE_ROLE_KEY'; // Khóa bảo mật
+// CẤU HÌNH SUPABASE DÙNG BIẾN MÔI TRƯỜNG
+const SUPABASE_URL = process.env.SUPABASE_URL || 'YOUR_SUPABASE_URL'; 
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'YOUR_SUPABASE_SERVICE_ROLE_KEY'; 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Cấu hình lưu trữ ảnh upload tạm thời
