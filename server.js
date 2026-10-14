@@ -162,14 +162,20 @@ app.post('/admin/change-password', async (req, res) => {
     res.redirect('/admin');
 });
 
-// --- Quản lý Giải pháp (Thêm mới có giá ⭐ & Sửa thông tin cơ bản) ---
+// --- Quản lý Giải pháp (Thêm mới có giá ⭐) ---
 app.post('/admin/solution/add', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const { name, image, demo_link, catalog_link, price } = req.body;
 
-    await supabase.from('solutions').insert([
+    const { error } = await supabase.from('solutions').insert([
         { name, image, demo_link, catalog_link, price }
     ]);
+
+    if (error) {
+        console.error('Lỗi khi thêm giải pháp mới vào Supabase:', error.message);
+        return res.status(500).send("Lỗi cơ sở dữ liệu Supabase khi thêm mới: " + error.message);
+    }
+
     res.redirect('/admin');
 });
 
